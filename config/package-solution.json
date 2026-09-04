@@ -1,0 +1,46 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "crud-webpart-sp-client-side-solution",
+    "id": "21d36e35-6067-46c4-9c05-e1d41be9626a",
+    "version": "1.0.0.2",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.23.2"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "CRUD_Webpart_SP description"
+      },
+      "longDescription": {
+        "default": "CRUD_Webpart_SP description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "crud-webpart-sp Feature",
+        "description": "The feature that activates elements of the crud-webpart-sp solution.",
+        "id": "6e7079bb-8ede-4dc8-84db-0bce98292059",
+        "version": "1.0.0.0"
+      }
+    ],
+    "webApiPermissionRequests": [
+      {
+        "resource": "Microsoft Graph",
+        "scope": "Mail.Send"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/crud-webpart-sp.sppkg"
+  }
+}

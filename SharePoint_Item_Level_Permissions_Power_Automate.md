@@ -1,0 +1,197 @@
+# SharePoint Item-Level Permission & Reminder Escalation Security Guide (Power Automate)
+
+## 1. Overview & Validation of Your Requirement
+
+### Requirement
+When an employee submits a new request in a SharePoint list:
+* Only the **Employee (Requester)** and their **Manager** should have access to view/edit the list item.
+* Other users present in the backend SharePoint list must **NOT** be able to see or access this item.
+* Manager assignments are dynamically retrieved from a SharePoint **Manager_List**, where:
+  * **`Manager`**: Stores the Manager user/person object or name.
+  * **`Member`**: Stores multiple employee/member objects (e.g. `adani demo8`, `Demo1`).
+* **Reminder & Escalation Schedule**:
+  * **Day 3**: 1st reminder sent to Manager if leave request remains `Pending`.
+  * **Day 6**: 2nd reminder sent to Manager if leave request remains `Pending`.
+  * **Day 10**: 3rd reminder sent to Manager if leave request remains `Pending`.
+  * **After Day 10**: Request status is automatically updated to **`Escalated`** (and HR / Next-Level Manager notified).
+
+---
+
+## 2. Is Your Condition / Approach Correct?
+
+### Yes, but with important caveats!
+
+Breaking permission inheritance on individual items (Item-Level Security) is a standard approach in SharePoint for handling sensitive requests (e.g., HR tickets, performance reviews, expense approvals). 
+
+However, before implementing this via Power Automate, evaluate the following **SharePoint architectural constraints and alternatives**:
+
+### Architecture Comparison Table
+
+| Approach | How it Works | Pros | Cons / Limitations | Recommended For |
+| :--- | :--- | :--- | :--- | :--- |
+| **Built-in List Item-Level Permissions** | List Settings > Advanced Settings > *Read/Edit items created by user*. | • Zero code/flow required.<br>• Instant execution.<br>• No performance overhead. | • Managers can only see items if they are **Site Owners** or have **Design/Full Control** permissions on the list. | Simple Employee-to-HR/Admin request processes. |
+| **Power Automate (Break Inheritance + Reminders)** | Flow breaks inheritance on item creation and handles 3, 6, 10-day reminders and escalation in a single workflow. | • Precise access control (Requester + direct Manager + Owners).<br>• Fully automated reminders & escalations.<br>• Supports custom dynamic `Manager_List`. | • **5,000 Unique Permission Limit per List**.<br>• Flow instance stays active during the reminder periods (up to 30-day Power Automate run limit). | Low to medium volume lists (<5,000 items total or archived regularly). |
+| **Separate Target Lists / Power Apps Front-end** | Request submitted to List A (Private), or filtered via Power Apps UI. | • Clean data separation.<br>• High scalability. | • Requires initial setup of frontend application or dual lists. | High volume enterprise request systems (>5,000 items/year). |
+
+> [!WARNING]
+> **SharePoint Unique Permission Threshold (5,000 Limit)**
+> SharePoint Online permits a maximum of **5,000 unique permission scopes per list**. If your list exceeds 5,000 unique items (where inheritance is broken per item), SharePoint will throw errors and list performance will degrade. 
+> * **Best Practice**: If your volume is high, archive completed items to another list or reset permissions after approval/closing.
+
+---
+
+## 3. Step-by-Step Implementation in Power Automate
+
+### Flow Architecture Overview (Permissions + 3, 6, 10 Day Reminder & Escalation)
+
+```mermaid
+flowchart TD
+    A[Trigger: Item Created in Leave List] --> B["Get Manager from Manager_List"]
+    B --> C[Break Permission Inheritance & Set Can View for Manager]
+    C --> D["Start & Wait for an Approval (Manager)"]
+    
+    D --> E["Parallel Branch: Wait 3 Days"]
+    E --> F["Check Item Status in SharePoint"]
+    F --> G{Is Status Still 'Pending'?}
+    G -- Yes --> H["Send 1st Reminder (Day 3 Email/Teams)"]
+    G -- No --> I[Stop Flow / Exit]
+    
+    H --> J["Parallel Branch: Wait 3 Days (Total Day 6)"]
+    J --> K["Check Item Status in SharePoint"]
+    K --> L{Is Status Still 'Pending'?}
+    L -- Yes --> M["Send 2nd Reminder (Day 6 Email/Teams)"]
+    L -- No --> I
+    
+    M --> N["Parallel Branch: Wait 4 Days (Total Day 10)"]
+    N --> O["Check Item Status in SharePoint"]
+    O --> P{Is Status Still 'Pending'?}
+    P -- Yes --> Q["Send 3rd Reminder (Day 10 Email/Teams)"]
+    P -- No --> I
+    
+    Q --> R["Wait 1 Day (Post Day 10 Timeout)"]
+    R --> S["Check Item Status in SharePoint"]
+    S --> T{Is Status Still 'Pending'?}
+    T -- Yes --> U["Update Status = 'Escalated' & Notify HR"]
+```
+
+---
+
+### 📸 Power Automate Workflow Visual Screenshots
+
+| Flow Diagram Part 1 (Item Creation & Permissions) | Flow Diagram Part 2 (Reminders & Escalation) |
+| :---: | :---: |
+| ![Power Automate Flow Part 1](images/flow_1.png) | ![Power Automate Flow Part 2](images/flow_2.png) |
+
+---
+
+
+### Step 1 to Step 7: Setting Up Item Permissions & Getting Manager
+
+1. **Trigger**: `SharePoint - When an item is created` (List: `Leave Management`).
+2. **Get Items from `Manager_List`**:
+   * **Filter Query**: `Member/EMail eq '@{triggerOutputs()?['body/Author/Email']}'`
+3. **Extract Manager Email**:
+   * `Compose` action `Compose_ManagerEmail`:
+     ```text
+     first(outputs('Get_items')?['body/value'])?['Manager']?['Email']
+     ```
+4. **Stop Sharing Item**: Break permission inheritance.
+5. **Grant Access to Requester**: `Created By Email` (`Can edit`).
+6. **Grant Access to Manager**: Outputs of `Compose_ManagerEmail` (`Can view`).
+7. **Grant Access to Site Owners**: Grant `Full Control` / `Edit` back to Site Owners.
+
+---
+
+### Step 8: 3-6-10 Day Reminder & Escalation Logic
+
+Add the following actions inside the **SAME EXISTING FLOW**:
+
+#### Phase 1: Day 3 Reminder
+1. **Action**: `Control - Delay`
+   * **Count**: `3`
+   * **Unit**: `Day`
+2. **Action**: `SharePoint - Get item`
+   * **Site Address**: Your SharePoint Site
+   * **List Name**: `Leave Management`
+   * **Id**: Dynamic Content `ID` (from trigger)
+3. **Action**: `Control - Condition` (Name: `Check_Status_Day_3`)
+   * **Condition**: `Status` (from *Get item*) `is equal to` `'Pending'`
+   * **If Yes (Still Pending)**:
+     * **Action**: `Office 365 Outlook - Send an email (V2)`
+       * **To**: Outputs of `Compose_ManagerEmail`
+       * **Subject**: `[1st Reminder] Pending Leave Request for @{triggerOutputs()?['body/Author/DisplayName']}`
+       * **Body**: `Dear Manager, The leave request submitted on @{triggerOutputs()?['body/Created']} is still pending approval. Please review it on the dashboard.`
+   * **If No (Already Approved/Rejected)**: *Leave empty (Flow completes gracefully).*
+
+---
+
+#### Phase 2: Day 6 Reminder
+Right below the Day 3 Condition:
+1. **Action**: `Control - Delay`
+   * **Count**: `3` (3 days after Day 3 = Day 6 Total)
+   * **Unit**: `Day`
+2. **Action**: `SharePoint - Get item`
+   * **Id**: Dynamic Content `ID`
+3. **Action**: `Control - Condition` (Name: `Check_Status_Day_6`)
+   * **Condition**: `Status` (from *Get item*) `is equal to` `'Pending'`
+   * **If Yes (Still Pending)**:
+     * **Action**: `Office 365 Outlook - Send an email (V2)`
+       * **To**: Outputs of `Compose_ManagerEmail`
+       * **Subject**: `[2nd Reminder] URGENT: Pending Leave Request for @{triggerOutputs()?['body/Author/DisplayName']}`
+       * **Body**: `Dear Manager, This is your second reminder regarding the leave request. It has been pending for 6 days.`
+
+---
+
+#### Phase 3: Day 10 Reminder
+Right below the Day 6 Condition:
+1. **Action**: `Control - Delay`
+   * **Count**: `4` (4 days after Day 6 = Day 10 Total)
+   * **Unit**: `Day`
+2. **Action**: `SharePoint - Get item`
+   * **Id**: Dynamic Content `ID`
+3. **Action**: `Control - Condition` (Name: `Check_Status_Day_10`)
+   * **Condition**: `Status` (from *Get item*) `is equal to` `'Pending'`
+   * **If Yes (Still Pending)**:
+     * **Action**: `Office 365 Outlook - Send an email (V2)`
+       * **To**: Outputs of `Compose_ManagerEmail`
+       * **Subject**: `[FINAL REMINDER] Pending Leave Request for @{triggerOutputs()?['body/Author/DisplayName']}`
+       * **Body**: `Dear Manager, This is the final reminder. If not approved within 24 hours, this request will be automatically escalated to HR.`
+
+---
+
+#### Phase 4: Escalation (After Day 10)
+Right below the Day 10 Condition:
+1. **Action**: `Control - Delay`
+   * **Count**: `1` (1 day after Day 10 = Day 11 Escalation)
+   * **Unit**: `Day`
+2. **Action**: `SharePoint - Get item`
+   * **Id**: Dynamic Content `ID`
+3. **Action**: `Control - Condition` (Name: `Check_Status_Day_11_Escalation`)
+   * **Condition**: `Status` (from *Get item*) `is equal to` `'Pending'`
+   * **If Yes (Still Pending)**:
+     * **Action**: `SharePoint - Update item`
+       * **List Name**: `Leave Management`
+       * **Id**: Dynamic Content `ID`
+       * **Status**: `'Escalated'`
+     * **Action**: `Office 365 Outlook - Send an email (V2)`
+       * **To**: `hr-department@yourcompany.com` (or Higher Manager Email)
+       * **Subject**: `[ESCALATED] Leave Request Pending Over 10 Days for @{triggerOutputs()?['body/Author/DisplayName']}`
+       * **Body**: `Attention HR, The leave request for @{triggerOutputs()?['body/Author/DisplayName']} was not acted upon by Manager @{outputs('Compose_ManagerEmail')} after 10 days and 3 reminders. The request status has been set to Escalated.`
+
+---
+
+## 4. Common Troubleshooting & Best Practices
+
+1. **Power Automate 30-Day Run Limit**:
+   * A single Power Automate flow run can stay active for up to **30 days**. Since this reminder schedule takes 11 days total, it runs well within Power Automate's 30-day execution limit.
+
+2. **Why Re-fetch Item Status (`Get item`) Before Each Reminder?**:
+   * If a manager approves the request on Day 4, the status changes to `Approved` in SharePoint.
+   * When the Day 6 delay finishes, the flow runs `Get item` and sees `Status = Approved`. The condition `Status == Pending` evaluates to `False`, so **no 2nd reminder is sent**, cleanly stopping further reminders!
+
+3. **Handling Multi-Value Member Columns in `Manager_List`**:
+   * Since your `Manager_List` has multiple members per manager (e.g. `Bob` manages both `adani demo8` and `Demo1`), using `Member/EMail eq 'email'` in OData filter checks if **any** item in the multi-person array matches the email.
+
+4. **Flow Execution Delay**: 
+   * When an item is created, there is a short window (2–15 seconds) before Power Automate breaks inheritance.
+   * **Mitigation**: Set up SharePoint List View Filters (e.g., `Created By = [Me]` or `Manager = [Me]`) so standard users don't see other items even during the brief window before the flow runs.

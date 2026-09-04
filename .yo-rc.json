@@ -1,0 +1,19 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "useGulp": false,
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "24.18.0",
+    "sdksVersions": {},
+    "version": "1.23.2",
+    "libraryName": "crud-webpart-sp",
+    "libraryId": "21d36e35-6067-46c4-9c05-e1d41be9626a",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "CRUD_Webpart_SP",
+    "solutionShortDescription": "CRUD_Webpart_SP description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}
