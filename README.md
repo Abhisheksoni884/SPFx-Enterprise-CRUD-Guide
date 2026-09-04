@@ -89,7 +89,7 @@ For detailed technical guides and architecture breakdown, refer to the included 
 
 ### ⚡ Power Automate Flow Screenshots
 
-| Part 1: Item Permissions & Manager Lookup | Part 2: 3-6-10 Day Reminders & Escalation |
+| Part 1: Item Permissions, Manager Lookup & Conditional Reminders | Part 2: 3-6-10 Day Escalations & Status Update Workflows |
 | :---: | :---: |
 | ![Flow Diagram Part 1](images/flow_1.png) | ![Flow Diagram Part 2](images/flow_2.png) |
 

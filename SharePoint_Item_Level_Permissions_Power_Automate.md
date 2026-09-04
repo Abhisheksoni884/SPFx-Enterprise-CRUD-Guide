@@ -78,7 +78,7 @@ flowchart TD
 
 ### 📸 Power Automate Workflow Visual Screenshots
 
-| Flow Diagram Part 1 (Item Creation & Permissions) | Flow Diagram Part 2 (Reminders & Escalation) |
+| Flow Part 1: Item Permissions, Manager Lookup & Conditional Reminders | Flow Part 2: 3-6-10 Day Escalations & Status Update Workflows |
 | :---: | :---: |
 | ![Power Automate Flow Part 1](images/flow_1.png) | ![Power Automate Flow Part 2](images/flow_2.png) |
 
