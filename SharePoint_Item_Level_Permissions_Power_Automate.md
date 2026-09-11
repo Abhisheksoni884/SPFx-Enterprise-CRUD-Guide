@@ -97,7 +97,7 @@ flowchart TD
 
 * **Card Name**: `When_a_new_item_is_created`
 * **Action**: `SharePoint - When an item is created`
-* **List Name**: `Leave Management`
+* **List Name**: `'Employee Leave Requests'`
 
 #### Step 2 — Get Manager from Manager_List
 
@@ -189,7 +189,7 @@ This removes **all** inherited permissions from the item so you can set custom o
 |:---|:---|
 | **Site Address** | `https://yourtenant.sharepoint.com/sites/yoursite` |
 | **Method** | `POST` |
-| **Uri** | `_api/web/lists/getbytitle('Leave Management')/items(@{triggerOutputs()?['body/ID']})/breakroleinheritance(copyRoleAssignments=false, clearSubscopes=true)` |
+| **Uri** | `_api/web/lists/getbytitle('Employee Leave Requests')/items(@{triggerOutputs()?['body/ID']})/breakroleinheritance(copyRoleAssignments=false, clearSubscopes=true)` |
 | **Headers** | `Accept` : `application/json;odata=verbose` |
 | **Body** | *(leave empty)* |
 
@@ -205,7 +205,7 @@ This removes **all** inherited permissions from the item so you can set custom o
 |:---|:---|
 | **Site Address** | `https://yourtenant.sharepoint.com/sites/yoursite` |
 | **Method** | `POST` |
-| **Uri** | `_api/web/lists/getbytitle('Leave Management')/items(@{triggerOutputs()?['body/ID']})/roleassignments/addroleassignment(principalid=@{outputs('Compose_RequesterUserID')}, roledefid=1073741827)` |
+| **Uri** | `_api/web/lists/getbytitle('Employee Leave Requests')/items(@{triggerOutputs()?['body/ID']})/roleassignments/addroleassignment(principalid=@{outputs('Compose_RequesterUserID')}, roledefid=1073741827)` |
 | **Headers** | `Accept` : `application/json;odata=verbose` |
 | **Body** | *(leave empty)* |
 
@@ -218,7 +218,7 @@ This removes **all** inherited permissions from the item so you can set custom o
 |:---|:---|
 | **Site Address** | `https://yourtenant.sharepoint.com/sites/yoursite` |
 | **Method** | `POST` |
-| **Uri** | `_api/web/lists/getbytitle('Leave Management')/items(@{triggerOutputs()?['body/ID']})/roleassignments/addroleassignment(principalid=@{outputs('Compose_ManagerUserID')}, roledefid=1073741826)` |
+| **Uri** | `_api/web/lists/getbytitle('Employee Leave Requests')/items(@{triggerOutputs()?['body/ID']})/roleassignments/addroleassignment(principalid=@{outputs('Compose_ManagerUserID')}, roledefid=1073741826)` |
 | **Headers** | `Accept` : `application/json;odata=verbose` |
 | **Body** | *(leave empty)* |
 
@@ -231,7 +231,7 @@ This removes **all** inherited permissions from the item so you can set custom o
 |:---|:---|
 | **Site Address** | `https://yourtenant.sharepoint.com/sites/yoursite` |
 | **Method** | `POST` |
-| **Uri** | `_api/web/lists/getbytitle('Leave Management')/items(@{triggerOutputs()?['body/ID']})/roleassignments/addroleassignment(principalid=@{outputs('Compose_OwnersGroupID')}, roledefid=1073741829)` |
+| **Uri** | `_api/web/lists/getbytitle('Employee Leave Requests')/items(@{triggerOutputs()?['body/ID']})/roleassignments/addroleassignment(principalid=@{outputs('Compose_OwnersGroupID')}, roledefid=1073741829)` |
 | **Headers** | `Accept` : `application/json;odata=verbose` |
 | **Body** | *(leave empty)* |
 
@@ -255,7 +255,7 @@ Add the following actions inside the **SAME EXISTING FLOW**:
    * **Unit**: `Day`
 2. **Action**: `SharePoint - Get item`
    * **Site Address**: Your SharePoint Site
-   * **List Name**: `Leave Management`
+   * **List Name**: `'Employee Leave Requests'`
    * **Id**: Dynamic Content `ID` (from trigger)
 3. **Action**: `Control - Condition` (Name: `Check_Status_Day_3`)
    * **Condition**: `Status` (from *Get item*) `is equal to` `'Pending'`
@@ -313,7 +313,7 @@ Right below the Day 10 Condition:
    * **Condition**: `Status` (from *Get item*) `is equal to` `'Pending'`
    * **If Yes (Still Pending)**:
      * **Action**: `SharePoint - Update item`
-       * **List Name**: `Leave Management`
+       * **List Name**: `Employee Leave Requests`
        * **Id**: Dynamic Content `ID`
        * **Status**: `'Escalated'`
      * **Action**: `Office 365 Outlook - Send an email (V2)`
@@ -329,7 +329,7 @@ Instead of keeping individual flow runs open for 10–11 days with delays, you c
 
 #### Flow 3 Architecture Steps:
 1. **Trigger**: `Schedule - Recurrence` (Frequency: `1 Day`, Runs daily at 08:00 AM).
-2. **Get Pending Requests**: `SharePoint - Get items` from `Leave Management` where `Status eq 'Pending'`.
+2. **Get Pending Requests**: `SharePoint - Get items` from `Employee Leave Requests` where `Status eq 'Pending'`.
 3. **Apply to Each Item**:
    - **Compose DaysPending**: Expression calculating integer difference between current date `utcNow()` and `Created` date.
    - **Get Manager**: `SharePoint - Get items` from `Manager_List` filtering by requester email.
