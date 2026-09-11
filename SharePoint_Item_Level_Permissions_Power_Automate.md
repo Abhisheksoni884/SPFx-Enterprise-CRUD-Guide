@@ -85,20 +85,163 @@ flowchart TD
 ---
 
 
-### Step 1 to Step 7: Setting Up Item Permissions & Getting Manager
+### Step 1 to Step 10: Setting Up Item Permissions & Getting Manager (via HTTP REST API)
 
-1. **Trigger**: `SharePoint - When an item is created` (List: `Leave Management`).
-2. **Get Items from `Manager_List`**:
-   * **Filter Query**: `Member/EMail eq '@{triggerOutputs()?['body/Author/Email']}'`
-3. **Extract Manager Email**:
-   * `Compose` action `Compose_ManagerEmail`:
-     ```text
-     first(outputs('Get_items')?['body/value'])?['Manager']?['Email']
-     ```
-4. **Stop Sharing Item**: Break permission inheritance.
-5. **Grant Access to Requester**: `Created By Email` (`Can edit`).
-6. **Grant Access to Manager**: Outputs of `Compose_ManagerEmail` (`Can view`).
-7. **Grant Access to Site Owners**: Grant `Full Control` / `Edit` back to Site Owners.
+> [!NOTE]
+> All permission actions below use the **"Send an HTTP request to SharePoint"** action instead of the built-in "Stop Sharing" and "Grant Access" connectors. This gives you full control and avoids connector quirks.
+
+> [!IMPORTANT]
+> **Action Card Names Matter!** The names below (e.g. `HTTP_EnsureUser_Requester`) are used in the `outputs('...')` expressions of later steps. **Rename each action card exactly as shown** — otherwise the expressions will break.
+
+#### Step 1 — Trigger
+
+* **Card Name**: `When_a_new_item_is_created`
+* **Action**: `SharePoint - When an item is created`
+* **List Name**: `Leave Management`
+
+#### Step 2 — Get Manager from Manager_List
+
+* **Card Name**: `Get_items` 
+* **Action**: `SharePoint - Get items`
+* **List Name**: `Manager_List`
+* **Filter Query**: `Member/EMail eq '@{triggerOutputs()?['body/Author/Email']}'`
+
+#### Step 3 — Extract Manager Email
+
+* **Card Name**: `Compose_ManagerEmail`
+* **Action**: `Data Operations - Compose`
+* **Inputs (Expression)**:
+  ```text
+  first(outputs('Get_items')?['body/value'])?['Manager']?['Email']
+  ```
+
+#### Step 4 — Resolve Requester's User ID (HTTP: EnsureUser)
+
+* **Card Name**: `HTTP_EnsureUser_Requester`
+* **Action**: `Send an HTTP request to SharePoint`
+
+| Field | Value |
+|:---|:---|
+| **Site Address** | `https://yourtenant.sharepoint.com/sites/yoursite` |
+| **Method** | `POST` |
+| **Uri** | `_api/web/ensureuser` |
+| **Headers** | `Accept` : `application/json;odata=verbose` <br> `Content-Type` : `application/json;odata=verbose` |
+| **Body** | `{ "logonName": "@{triggerOutputs()?['body/Author/Email']}" }` |
+
+* **Card Name**: `Compose_RequesterUserID`
+* **Action**: `Data Operations - Compose`
+* **Inputs (Expression)**:
+  ```text
+  outputs('HTTP_EnsureUser_Requester')?['body']?['d']?['Id']
+  ```
+
+> [!TIP]
+> **Shortcut**: If the trigger already gives you `AuthorId`, you can skip this step and directly use `triggerOutputs()?['body/AuthorId']` as the Requester's principal ID.
+
+#### Step 5 — Resolve Manager's User ID (HTTP: EnsureUser)
+
+* **Card Name**: `HTTP_EnsureUser_Manager`
+* **Action**: `Send an HTTP request to SharePoint`
+
+| Field | Value |
+|:---|:---|
+| **Site Address** | `https://yourtenant.sharepoint.com/sites/yoursite` |
+| **Method** | `POST` |
+| **Uri** | `_api/web/ensureuser` |
+| **Headers** | `Accept` : `application/json;odata=verbose` <br> `Content-Type` : `application/json;odata=verbose` |
+| **Body** | `{ "logonName": "@{outputs('Compose_ManagerEmail')}" }` |
+
+* **Card Name**: `Compose_ManagerUserID`
+* **Action**: `Data Operations - Compose`
+* **Inputs (Expression)**:
+  ```text
+  outputs('HTTP_EnsureUser_Manager')?['body']?['d']?['Id']
+  ```
+
+#### Step 6 — Get Site Owners Group ID (HTTP)
+
+* **Card Name**: `HTTP_Get_Owners_Group`
+* **Action**: `Send an HTTP request to SharePoint`
+
+| Field | Value |
+|:---|:---|
+| **Site Address** | `https://yourtenant.sharepoint.com/sites/yoursite` |
+| **Method** | `GET` |
+| **Uri** | `_api/web/associatedownergroup?$select=Id` |
+| **Headers** | `Accept` : `application/json;odata=verbose` |
+| **Body** | *(leave empty)* |
+
+* **Card Name**: `Compose_OwnersGroupID`
+* **Action**: `Data Operations - Compose`
+* **Inputs (Expression)**:
+  ```text
+  outputs('HTTP_Get_Owners_Group')?['body']?['d']?['Id']
+  ```
+
+#### Step 7 — Break Role Inheritance (HTTP)
+
+This removes **all** inherited permissions from the item so you can set custom ones.
+
+* **Card Name**: `HTTP_Break_Role_Inheritance`
+* **Action**: `Send an HTTP request to SharePoint`
+
+| Field | Value |
+|:---|:---|
+| **Site Address** | `https://yourtenant.sharepoint.com/sites/yoursite` |
+| **Method** | `POST` |
+| **Uri** | `_api/web/lists/getbytitle('Leave Management')/items(@{triggerOutputs()?['body/ID']})/breakroleinheritance(copyRoleAssignments=false, clearSubscopes=true)` |
+| **Headers** | `Accept` : `application/json;odata=verbose` |
+| **Body** | *(leave empty)* |
+
+> [!CAUTION]
+> After this action, **nobody** has access to the item — not even Site Owners. Steps 8, 9, and 10 must follow immediately to restore the correct access.
+
+#### Step 8 — Grant Edit Access to Requester (Member) (HTTP)
+
+* **Card Name**: `HTTP_Grant_Edit_Requester`
+* **Action**: `Send an HTTP request to SharePoint`
+
+| Field | Value |
+|:---|:---|
+| **Site Address** | `https://yourtenant.sharepoint.com/sites/yoursite` |
+| **Method** | `POST` |
+| **Uri** | `_api/web/lists/getbytitle('Leave Management')/items(@{triggerOutputs()?['body/ID']})/roleassignments/addroleassignment(principalid=@{outputs('Compose_RequesterUserID')}, roledefid=1073741827)` |
+| **Headers** | `Accept` : `application/json;odata=verbose` |
+| **Body** | *(leave empty)* |
+
+#### Step 9 — Grant Read Access to Manager (HTTP)
+
+* **Card Name**: `HTTP_Grant_Read_Manager`
+* **Action**: `Send an HTTP request to SharePoint`
+
+| Field | Value |
+|:---|:---|
+| **Site Address** | `https://yourtenant.sharepoint.com/sites/yoursite` |
+| **Method** | `POST` |
+| **Uri** | `_api/web/lists/getbytitle('Leave Management')/items(@{triggerOutputs()?['body/ID']})/roleassignments/addroleassignment(principalid=@{outputs('Compose_ManagerUserID')}, roledefid=1073741826)` |
+| **Headers** | `Accept` : `application/json;odata=verbose` |
+| **Body** | *(leave empty)* |
+
+#### Step 10 — Grant Full Control to Site Owners Group (HTTP)
+
+* **Card Name**: `HTTP_Grant_FullControl_Owners`
+* **Action**: `Send an HTTP request to SharePoint`
+
+| Field | Value |
+|:---|:---|
+| **Site Address** | `https://yourtenant.sharepoint.com/sites/yoursite` |
+| **Method** | `POST` |
+| **Uri** | `_api/web/lists/getbytitle('Leave Management')/items(@{triggerOutputs()?['body/ID']})/roleassignments/addroleassignment(principalid=@{outputs('Compose_OwnersGroupID')}, roledefid=1073741829)` |
+| **Headers** | `Accept` : `application/json;odata=verbose` |
+| **Body** | *(leave empty)* |
+
+> [!NOTE]
+> **Role Definition ID Reference:**
+> | Role | roledefid |
+> |:---|:---|
+> | Full Control | `1073741829` |
+> | Edit / Contribute | `1073741827` |
+> | Read / View Only | `1073741826` |
 
 ---
 
