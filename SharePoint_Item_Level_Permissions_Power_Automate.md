@@ -78,9 +78,9 @@ flowchart TD
 
 ### 📸 Power Automate Workflow Visual Screenshots
 
-| Flow Part 1: Item Permissions, Manager Lookup & Conditional Reminders | Flow Part 2: 3-6-10 Day Escalations & Status Update Workflows |
-| :---: | :---: |
-| ![Power Automate Flow Part 1](images/flow_1.png) | ![Power Automate Flow Part 2](images/flow_2.png) |
+| Flow Part 1: Item Permissions & Manager Lookup | Flow Part 2: 3-6-10 Day Escalations | Flow Part 3: Recurrent Reminder Scheduler |
+| :---: | :---: | :---: |
+| ![Power Automate Flow Part 1](images/flow_1.png) | ![Power Automate Flow Part 2](images/flow_2.png) | ![Power Automate Flow Part 3](images/flow_3.png) |
 
 ---
 
@@ -320,6 +320,26 @@ Right below the Day 10 Condition:
        * **To**: `hr-department@yourcompany.com` (or Higher Manager Email)
        * **Subject**: `[ESCALATED] Leave Request Pending Over 10 Days for @{triggerOutputs()?['body/Author/DisplayName']}`
        * **Body**: `Attention HR, The leave request for @{triggerOutputs()?['body/Author/DisplayName']} was not acted upon by Manager @{outputs('Compose_ManagerEmail')} after 10 days and 3 reminders. The request status has been set to Escalated.`
+
+---
+
+### Step 9: Recurrent Scheduler Reminder Workflow (Alternative / Batch Pattern - Flow 3)
+
+Instead of keeping individual flow runs open for 10–11 days with delays, you can implement a scheduled batch flow (`Flow_3.png`) that runs daily via a **Recurrence** trigger.
+
+#### Flow 3 Architecture Steps:
+1. **Trigger**: `Schedule - Recurrence` (Frequency: `1 Day`, Runs daily at 08:00 AM).
+2. **Get Pending Requests**: `SharePoint - Get items` from `Leave Management` where `Status eq 'Pending'`.
+3. **Apply to Each Item**:
+   - **Compose DaysPending**: Expression calculating integer difference between current date `utcNow()` and `Created` date.
+   - **Get Manager**: `SharePoint - Get items` from `Manager_List` filtering by requester email.
+   - **Compose ManagerEmail**: Extract manager email.
+   - **Switch on `DaysPending`**:
+     - **Case 3**: Send 1st Reminder Email/Teams message to Manager.
+     - **Case 6**: Send 2nd Urgent Reminder Email/Teams message to Manager.
+     - **Case 10**: Send 3rd Final Reminder Email/Teams message to Manager.
+     - **Case 11 (or >10)**: Update item `Status = 'Escalated'` and notify HR.
+     - **Default**: Do nothing (0 Actions).
 
 ---
 

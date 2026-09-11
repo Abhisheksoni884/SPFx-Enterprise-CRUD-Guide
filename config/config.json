@@ -9,6 +9,14 @@
           "manifest": "./src/webparts/crudOperation/CrudOperationWebPart.manifest.json"
         }
       ]
+    },
+    "site-sidebar-application-customizer": {
+      "components": [
+        {
+          "entrypoint": "./lib/extensions/siteSidebar/SiteSidebarApplicationCustomizer.js",
+          "manifest": "./src/extensions/siteSidebar/SiteSidebarApplicationCustomizer.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},

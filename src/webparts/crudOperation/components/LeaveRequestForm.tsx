@@ -14,7 +14,9 @@ import {
 import { WebPartContext } from '@microsoft/sp-webpart-base';
 import styles from './CrudOperation.module.scss';
 import PeoplePickerField from './PeoplePickerField';
+import FileUploadControl from './FileUploadControl';
 import {
+  IAttachmentInfo,
   IEmployeeLeaveRequest,
   ILeaveRequestInput,
   IPersonaInfo,
@@ -59,6 +61,9 @@ const LeaveRequestForm: React.FC<ILeaveRequestFormProps> = (props) => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [reason, setReason] = useState<string>('');
+  const [newAttachments, setNewAttachments] = useState<File[]>([]);
+  const [existingAttachments, setExistingAttachments] = useState<IAttachmentInfo[]>([]);
+  const [attachmentsToDelete, setAttachmentsToDelete] = useState<string[]>([]);
   const [errors, setErrors] = useState<IFormErrors>({});
 
   // Re-seed the form fields every time the panel is (re)opened.
@@ -68,6 +73,8 @@ const LeaveRequestForm: React.FC<ILeaveRequestFormProps> = (props) => {
     }
 
     setErrors({});
+    setNewAttachments([]);
+    setAttachmentsToDelete([]);
 
     if (editingItem) {
       setEmployee({
@@ -80,6 +87,7 @@ const LeaveRequestForm: React.FC<ILeaveRequestFormProps> = (props) => {
       setStartDate(toDate(editingItem.StartDate));
       setEndDate(toDate(editingItem.EndDate));
       setReason(editingItem.Reason || '');
+      setExistingAttachments(editingItem.AttachmentFiles || []);
     } else {
       const currentUser = context.pageContext.user;
       setEmployee({
@@ -92,8 +100,14 @@ const LeaveRequestForm: React.FC<ILeaveRequestFormProps> = (props) => {
       setStartDate(undefined);
       setEndDate(undefined);
       setReason('');
+      setExistingAttachments([]);
     }
   }, [isOpen, editingItem, context]);
+
+  const handleRemoveExistingAttachment = (fileName: string): void => {
+    setExistingAttachments((prev) => prev.filter((a) => a.FileName !== fileName));
+    setAttachmentsToDelete((prev) => [...prev, fileName]);
+  };
 
   const validate = (): IFormErrors => {
     const nextErrors: IFormErrors = {};
@@ -128,7 +142,18 @@ const LeaveRequestForm: React.FC<ILeaveRequestFormProps> = (props) => {
       return;
     }
 
-    onSubmit({ employee, leaveType, startDate, endDate, reason }, editingItem ? editingItem.Id : undefined);
+    onSubmit(
+      {
+        employee,
+        leaveType,
+        startDate,
+        endDate,
+        reason,
+        attachments: newAttachments,
+        attachmentsToDelete
+      },
+      editingItem ? editingItem.Id : undefined
+    );
   };
 
   return (
@@ -205,6 +230,14 @@ const LeaveRequestForm: React.FC<ILeaveRequestFormProps> = (props) => {
           description={`${reason.length}/${REASON_MAX_LENGTH} characters`}
           errorMessage={errors.reason}
           onChange={(_, value) => setReason(value || '')}
+        />
+
+        <FileUploadControl
+          newFiles={newAttachments}
+          existingFiles={existingAttachments}
+          onNewFilesChange={setNewAttachments}
+          onRemoveExistingFile={handleRemoveExistingAttachment}
+          disabled={isSaving}
         />
       </Stack>
     </Panel>

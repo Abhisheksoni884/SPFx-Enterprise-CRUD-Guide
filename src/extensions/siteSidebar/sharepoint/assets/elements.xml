@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Elements xmlns="http://schemas.microsoft.com/sharepoint/">
+    <CustomAction
+        Title="SiteSidebarApplicationCustomizer"
+        Location="ClientSideExtension.ApplicationCustomizer"
+        ClientSideComponentId="c8f1e290-7d34-4a25-9b2f-98124b61a100"
+        ClientSideComponentProperties="{&quot;title&quot;:&quot;Site Navigation Sidebar&quot;}">
+    </CustomAction>
+</Elements>

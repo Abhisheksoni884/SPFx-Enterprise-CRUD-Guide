@@ -3,7 +3,7 @@
   "solution": {
     "name": "crud-webpart-sp-client-side-solution",
     "id": "21d36e35-6067-46c4-9c05-e1d41be9626a",
-    "version": "1.0.0.2",
+    "version": "1.0.0.3",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,

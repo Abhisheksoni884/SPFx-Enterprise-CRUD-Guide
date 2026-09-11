@@ -21,6 +21,11 @@ export interface IPersonaInfo {
   email: string;
 }
 
+export interface IAttachmentInfo {
+  FileName: string;
+  ServerRelativeUrl: string;
+}
+
 // Shape returned when reading items from the "Employee Leave Requests" list.
 export interface IEmployeeLeaveRequest {
   Id: number;
@@ -34,6 +39,7 @@ export interface IEmployeeLeaveRequest {
   Reason: string;
   Status: LeaveStatus;
   ManagerComments: string;
+  AttachmentFiles?: IAttachmentInfo[];
 }
 
 // Shape used by the create/edit form before it is sent to SharePoint.
@@ -43,6 +49,8 @@ export interface ILeaveRequestInput {
   startDate: Date;
   endDate: Date;
   reason: string;
+  attachments?: File[];
+  attachmentsToDelete?: string[];
 }
 
 export const REASON_MAX_LENGTH = CONSTANT_REASON_MAX_LENGTH;

@@ -17,7 +17,9 @@ export const LEAVE_SELECT_FIELDS = [
   'EndDate',
   'Reason',
   'Status',
-  'ManagerComments'
+  'ManagerComments',
+  'AttachmentFiles/FileName',
+  'AttachmentFiles/ServerRelativeUrl'
 ] as const;
 
 export const TEAM_MAPPING_SELECT_FIELDS = [

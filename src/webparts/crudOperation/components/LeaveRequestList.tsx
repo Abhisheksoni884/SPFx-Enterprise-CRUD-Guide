@@ -115,6 +115,49 @@ const LeaveRequestList: React.FC<ILeaveRequestListProps> = (props) => {
     },
     { key: 'reason', name: 'Reason', fieldName: 'Reason', minWidth: 100, maxWidth: 200, isMultiline: true },
     {
+      key: 'attachments',
+      name: 'Attachments',
+      minWidth: 110,
+      maxWidth: 180,
+      onRender: (item: IEmployeeLeaveRequest) => {
+        const files = item.AttachmentFiles || [];
+        if (files.length === 0) {
+          return <span style={{ color: '#a19f9d' }}>-</span>;
+        }
+        return (
+          <Stack horizontal tokens={{ childrenGap: 4 }} verticalAlign="center" wrap>
+            {files.map((file, idx) => (
+              <a
+                key={idx}
+                href={file.ServerRelativeUrl || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={file.FileName}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 12,
+                  textDecoration: 'none',
+                  color: '#0078d4',
+                  backgroundColor: '#eff6fc',
+                  padding: '2px 6px',
+                  borderRadius: 4,
+                  maxWidth: 140,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <Icon iconName="Attach" style={{ fontSize: 12 }} />
+                <span>{file.FileName}</span>
+              </a>
+            ))}
+          </Stack>
+        );
+      }
+    },
+    {
       key: 'comments',
       name: 'Manager Comments',
       fieldName: 'ManagerComments',

@@ -1,0 +1,230 @@
+@import '~@microsoft/sp-office-ui-fabric-core/dist/sass/SPFabricCore.scss';
+
+.siteSidebarContainer {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+
+  .toggleLauncherBtn {
+    position: fixed;
+    top: 38%;
+    left: 0;
+    transform: translateY(-50%);
+    z-index: 99999;
+    background: linear-gradient(135deg, #0f2744 0%, #003366 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    box-shadow: 3px 0 12px rgba(15, 39, 68, 0.45);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 54px;
+    padding: 0;
+    transition: all 0.25s ease;
+
+    &:hover {
+      background: linear-gradient(135deg, #001f3f 0%, #002b54 100%);
+      box-shadow: 4px 0 16px rgba(0, 31, 63, 0.6);
+      width: 26px;
+    }
+
+    .btnIcon {
+      font-size: 14px;
+      line-height: 1;
+    }
+  }
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+
+  .headerLeftTitle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .headerIcon {
+    font-size: 20px;
+    color: #0f2744;
+  }
+
+  .headerTitle {
+    font-size: 17px;
+    font-weight: 600;
+    color: #0f2744;
+    margin: 0;
+    letter-spacing: -0.2px;
+  }
+
+  .closeBtn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #64748b;
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #f1f5f9;
+      color: #0f2744;
+    }
+  }
+}
+
+.panelBody {
+  padding: 16px 12px;
+  background: #fafbfc;
+  overflow-y: auto;
+  max-height: calc(100vh - 120px);
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+
+    &:hover {
+      background: #94a3b8;
+    }
+  }
+
+  .loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    gap: 12px;
+  }
+
+  .errorBanner {
+    padding: 12px;
+    background: #fde7e9;
+    color: #a80000;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    border: 1px solid #f9c3c6;
+  }
+
+  .navGroup {
+    margin-bottom: 16px;
+
+    .groupHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-left: 3.5px solid #0f2744;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13.5px;
+      color: #0f2744;
+      box-shadow: 0 1px 3px rgba(15, 39, 68, 0.05);
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        border-left-color: #003366;
+
+        .counterBadge {
+          background: #002050;
+        }
+      }
+
+      .headerLeft {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .counterBadge {
+        background: linear-gradient(135deg, #0f2744 0%, #003366 100%);
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(15, 39, 68, 0.25);
+        transition: background 0.2s ease;
+      }
+    }
+
+    .groupContent {
+      margin-top: 6px;
+      padding-left: 4px;
+    }
+  }
+
+  .nodeItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    margin: 3px 0;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #1e293b;
+    font-size: 13px;
+    transition: all 0.18s ease;
+    cursor: pointer;
+
+    &:hover {
+      background: #e2e8f0;
+      color: #0f2744;
+      font-weight: 500;
+      transform: translateX(2px);
+
+      .itemIcon {
+        color: #0f2744;
+      }
+    }
+
+    .itemLeft {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .itemIcon {
+      font-size: 15px;
+      color: #003366;
+      transition: color 0.15s ease;
+    }
+
+    .itemText {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 450;
+    }
+  }
+
+  .childContainer {
+    padding-left: 14px;
+    border-left: 2px solid #cbd5e1;
+    margin-left: 14px;
+  }
+}

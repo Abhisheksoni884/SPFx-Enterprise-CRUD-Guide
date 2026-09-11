@@ -18,9 +18,21 @@ import type { ICrudOperationProps } from './ICrudOperationProps';
 import LeaveRequestList from './LeaveRequestList';
 import LeaveRequestForm from './LeaveRequestForm';
 import ApprovalDialog from './ApprovalDialog';
-import LeaveRequestService from '../services/LeaveRequestService';
-import TeamMappingService from '../../../framework/Services/TeamMappingService';
-import GraphEmailService from '../../../framework/Services/GraphEmailService';
+import {
+  getAllLeaveRequests,
+  createLeaveRequest,
+  updateLeaveRequest,
+  approveLeaveRequest,
+  rejectLeaveRequest,
+  cancelLeaveRequest,
+  resolveEmployee
+} from '../services/LeaveRequestService';
+import {
+  isUserAManager,
+  getManagedTeamMembers,
+  getManagerForEmployee
+} from '../../../framework/Services/TeamMappingService';
+import { sendLeaveNotificationToManager } from '../../../framework/Services/GraphEmailService';
 import { IEmployeeLeaveRequest, ILeaveRequestInput, LeaveStatus } from '../models/IEmployeeLeaveRequest';
 import { MESSAGES } from '../../../framework/Constants/Constant';
 
@@ -32,8 +44,6 @@ interface IManagedTeam {
 
 const CrudOperation: React.FC<ICrudOperationProps> = (props) => {
   const { context, listName } = props;
-  const service = useMemo(() => new LeaveRequestService(context, listName), [context, listName]);
-  const teamMappingService = useMemo(() => new TeamMappingService(context), [context]);
 
   const userEmail = context.pageContext.user.email || '';
   const userLogin = context.pageContext.user.loginName || '';
@@ -62,11 +72,11 @@ const CrudOperation: React.FC<ICrudOperationProps> = (props) => {
   useEffect(() => {
     const initRoleAndTeam = async (): Promise<void> => {
       try {
-        const userIsManager = await teamMappingService.isUserAManager(userEmail, userLogin, userName);
+        const userIsManager = await isUserAManager(context, userEmail, userLogin, userName);
         setIsManager(userIsManager);
 
         if (userIsManager) {
-          const team = await teamMappingService.getManagedTeamMembers(userEmail, userLogin, userName);
+          const team = await getManagedTeamMembers(context, userEmail, userLogin, userName);
           setManagedTeam(team);
         }
       } catch (err) {
@@ -75,13 +85,13 @@ const CrudOperation: React.FC<ICrudOperationProps> = (props) => {
     };
 
     initRoleAndTeam().catch(() => undefined);
-  }, [teamMappingService, userEmail, userLogin, userName]);
+  }, [context, userEmail, userLogin, userName]);
 
   const loadItems = async (): Promise<void> => {
     setIsLoading(true);
     setErrorMessage(undefined);
     try {
-      const results = await service.getAll();
+      const results = await getAllLeaveRequests(context, listName);
       setItems(results);
     } catch (error) {
       setErrorMessage(`${MESSAGES.ERROR_LOAD}: ${(error as Error).message}`);
@@ -94,7 +104,7 @@ const CrudOperation: React.FC<ICrudOperationProps> = (props) => {
     loadItems().catch(() => {
       /* handled inside loadItems */
     });
-  }, [service]);
+  }, [context, listName]);
 
   // Filter items based on active Tab (My Requests vs Manager Dashboard)
   const displayedItems = useMemo(() => {
@@ -157,26 +167,27 @@ const CrudOperation: React.FC<ICrudOperationProps> = (props) => {
       // id === 0 means freshly picked persona not yet resolved to a SharePoint user ID.
       const resolvedEmployee =
         input.employee.id === 0
-          ? await service.resolveEmployee(input.employee.loginName, input.employee.displayName, input.employee.email)
+          ? await resolveEmployee(context, input.employee.loginName, input.employee.displayName, input.employee.email)
           : input.employee;
       const resolvedInput: ILeaveRequestInput = { ...input, employee: resolvedEmployee };
 
       if (id) {
-        await service.update(id, resolvedInput);
+        await updateLeaveRequest(context, id, resolvedInput, listName);
         setSuccessMessage(MESSAGES.SUCCESS_UPDATE);
       } else {
-        const createdItem = await service.create(resolvedInput);
+        const createdItem = await createLeaveRequest(context, resolvedInput, listName);
         setSuccessMessage(MESSAGES.SUCCESS_SUBMIT);
 
         // Send Email Notification to Manager via MS Graph API
         try {
-          const managerInfo = await teamMappingService.getManagerForEmployee(
+          const managerInfo = await getManagerForEmployee(
+            context,
             resolvedEmployee.email,
             resolvedEmployee.loginName,
             resolvedEmployee.displayName
           );
           if (managerInfo && managerInfo.email) {
-            await GraphEmailService.sendLeaveNotificationToManager(
+            await sendLeaveNotificationToManager(
               context,
               managerInfo.email,
               managerInfo.displayName,
@@ -208,7 +219,7 @@ const CrudOperation: React.FC<ICrudOperationProps> = (props) => {
     }
     setErrorMessage(undefined);
     try {
-      await service.remove(pendingDelete.Id);
+      await cancelLeaveRequest(context, pendingDelete.Id, listName);
       setSuccessMessage(MESSAGES.SUCCESS_CANCEL);
       setPendingDelete(undefined);
       await loadItems();
@@ -234,10 +245,10 @@ const CrudOperation: React.FC<ICrudOperationProps> = (props) => {
     setErrorMessage(undefined);
     try {
       if (approvalAction === 'Approve') {
-        await service.approveRequest(item.Id, comments);
+        await approveLeaveRequest(context, item.Id, comments, listName);
         setSuccessMessage(MESSAGES.SUCCESS_APPROVE);
       } else {
-        await service.rejectRequest(item.Id, comments);
+        await rejectLeaveRequest(context, item.Id, comments, listName);
         setSuccessMessage(MESSAGES.SUCCESS_REJECT);
       }
 

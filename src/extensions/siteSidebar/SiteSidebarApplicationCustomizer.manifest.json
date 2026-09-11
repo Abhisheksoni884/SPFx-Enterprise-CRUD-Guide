@@ -1,0 +1,13 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-extension-manifest.schema.json",
+  "id": "c8f1e290-7d34-4a25-9b2f-98124b61a100",
+  "alias": "SiteSidebarApplicationCustomizer",
+  "componentType": "Extension",
+  "extensionType": "ApplicationCustomizer",
+  "version": "*",
+  "manifestVersion": 2,
+  "requiresCustomScript": false,
+  "properties": {
+    "title": "Site Navigation Sidebar"
+  }
+}

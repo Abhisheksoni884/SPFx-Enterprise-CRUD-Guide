@@ -29,11 +29,12 @@ The **Employee Leave Management & Manager Approval System** is an enterprise-gra
 - Uses **Microsoft Graph API (`MSGraphClientV3`)** with `Mail.Send` scope instead of standard legacy SharePoint email APIs.
 - Emails include full application details and a direct action button to open the Manager Dashboard.
 
-### 🛡️ Production Architecture Layer (`src/framework/`)
-- **PnP JS v4 Singleton (`pnpjsConfig.ts`)**: Centralized SPFI instance creation.
-- **Constants (`Constant.ts`)**: Single source of truth for list names, field schemas, choices, and notification messages.
-- **Logging Service (`LoggingService.ts`)**: Automatic error logging to SharePoint `LogHistory` list with fallback warning.
-- **Utilities (`Utilities.ts`)**: Reusable date formatting, validation routines, and string sanitation helpers.
+### 🎨 Site Navigation Sidebar (Application Customizer Extension)
+- **SiteSidebar Application Customizer**: Custom SPFx Extension (`SiteSidebarApplicationCustomizer.ts`) that injects a responsive drawer menu.
+- **Clean View Mode**: Automatically hides default SharePoint suite bars, left app bars, hero banners, and footers for a distraction-free user experience.
+
+### 📎 Multi-File Attachments (`FileUploadControl`)
+- **Drag & Drop Attachment Upload**: Integrated Fluent UI `FileUploadControl` in `LeaveRequestForm.tsx` supporting multi-file drag and drop, file size limits (10 MB/file), max file count validations (5 files), and PnPjs item attachment uploads.
 
 ---
 
@@ -84,14 +85,14 @@ The **Employee Leave Management & Manager Approval System** is an enterprise-gra
 For detailed technical guides and architecture breakdown, refer to the included documentation:
 
 1. **[SPFx Developer Guide](SPFx_Developer_Guide.md)**: Deep dive into project architecture, service patterns, and SPFx standards.
-2. **[SPFx Ultimate Deep Reference Guide](SPFx_Ultimate_Deep_Reference_Guide.md)**: Comprehensive reference for PnPjs, Graph API, and deployment commands.
-3. **[SharePoint Item-Level Permissions & Power Automate Guide](SharePoint_Item_Level_Permissions_Power_Automate.md)**: Complete guide for setting up item-level security, break permission inheritance, and 3-6-10 day reminder escalations.
+2. **[SPFx Execution Flow & Debugging Guide](SPFx_Execution_Flow_and_Debugging_Guide.md)**: Step-by-step lifecycle flow, call hierarchy, and debugging instructions.
+3. **[SharePoint Item-Level Permissions & Power Automate Guide](SharePoint_Item_Level_Permissions_Power_Automate.md)**: Complete guide for setting up item-level security, break permission inheritance, 3-6-10 day reminder escalations, and recurrent batch schedulers.
 
 ### ⚡ Power Automate Flow Screenshots
 
-| Part 1: Item Permissions, Manager Lookup & Conditional Reminders | Part 2: 3-6-10 Day Escalations & Status Update Workflows |
-| :---: | :---: |
-| ![Flow Diagram Part 1](images/flow_1.png) | ![Flow Diagram Part 2](images/flow_2.png) |
+| Part 1: Item Permissions & Manager Lookup | Part 2: 3-6-10 Day Escalations | Part 3: Recurrent Reminder Scheduler |
+| :---: | :---: | :---: |
+| ![Flow Diagram Part 1](images/flow_1.png) | ![Flow Diagram Part 2](images/flow_2.png) | ![Flow Diagram Part 3](images/flow_3.png) |
 
 ---
 
