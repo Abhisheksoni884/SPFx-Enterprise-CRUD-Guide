@@ -88,11 +88,12 @@ For detailed technical guides and architecture breakdown, refer to the included 
 2. **[SPFx Execution Flow & Debugging Guide](SPFx_Execution_Flow_and_Debugging_Guide.md)**: Step-by-step lifecycle flow, call hierarchy, and debugging instructions.
 3. **[SharePoint Item-Level Permissions & Power Automate Guide](SharePoint_Item_Level_Permissions_Power_Automate.md)**: Complete guide for setting up item-level security, break permission inheritance, 3-6-10 day reminder escalations, and recurrent batch schedulers.
 
-### ⚡ Power Automate Flow Screenshots
+| Flow Part 1: Item Permissions & Manager Lookup | Flow Part 2: 3-6-10 Day Escalation Workflows |
+| :---: | :---: |
+| ![Flow Diagram Part 1](images/Flow_1.png) | ![Flow Diagram Part 2](images/Flow_2.png) |
 
-| Part 1: Item Permissions & Manager Lookup | Part 2: 3-6-10 Day Escalations | Part 3: Recurrent Reminder Scheduler |
-| :---: | :---: | :---: |
-| ![Flow Diagram Part 1](images/Flow_1.png) | ![Flow Diagram Part 2](images/Flow_2.png) | ![Flow Diagram Part 3](images/Flow_3.png) |
+#### Flow Part 3: Recurrent Reminder Scheduler Workflow
+![Flow Diagram Part 3](images/Flow_3.png)
 
 ---
 
