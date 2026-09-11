@@ -80,7 +80,7 @@ flowchart TD
 
 | Flow Part 1: Item Permissions & Manager Lookup | Flow Part 2: 3-6-10 Day Escalations | Flow Part 3: Recurrent Reminder Scheduler |
 | :---: | :---: | :---: |
-| ![Power Automate Flow Part 1](images/flow_1.png) | ![Power Automate Flow Part 2](images/flow_2.png) | ![Power Automate Flow Part 3](images/flow_3.png) |
+| ![Power Automate Flow Part 1](images/Flow_1.png) | ![Power Automate Flow Part 2](images/Flow_2.png) | ![Power Automate Flow Part 3](images/Flow_3.png) |
 
 ---
 

@@ -92,7 +92,7 @@ For detailed technical guides and architecture breakdown, refer to the included 
 
 | Part 1: Item Permissions & Manager Lookup | Part 2: 3-6-10 Day Escalations | Part 3: Recurrent Reminder Scheduler |
 | :---: | :---: | :---: |
-| ![Flow Diagram Part 1](images/flow_1.png) | ![Flow Diagram Part 2](images/flow_2.png) | ![Flow Diagram Part 3](images/flow_3.png) |
+| ![Flow Diagram Part 1](images/Flow_1.png) | ![Flow Diagram Part 2](images/Flow_2.png) | ![Flow Diagram Part 3](images/Flow_3.png) |
 
 ---
 
